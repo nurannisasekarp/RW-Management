@@ -6,6 +6,6 @@ const profileController = require('../controllers/profileController');
 router.get('/getProfile', profileController.getProfile);
 
 // Rute untuk memperbarui profil pengguna
-router.put('/updateProfile', profileController.updateProfile);
+router.patch('/updateProfile', profileController.updateProfile);
 
 module.exports = router;

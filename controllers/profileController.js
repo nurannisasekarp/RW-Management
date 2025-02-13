@@ -11,14 +11,13 @@ exports.getProfile = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Ambil data pengguna berdasarkan id yang terverifikasi dari token
-    const [user] = await db.query('SELECT id, username, name, email, role FROM users WHERE id = ?', [decoded.id]);
+    const [user] = await db.query('SELECT username, name, email, role FROM users WHERE id = ?', [decoded.id]);
     
     if (!user.length) {
       return res.status(404).json({ error: 'User tidak ditemukan' });
     }
     
     res.json({
-      id: user[0].id,
       username: user[0].username,
       name: user[0].name,
       email: user[0].email,
