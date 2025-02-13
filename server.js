@@ -5,6 +5,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
+const profileRoute = require('./routes/profileRoute');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/complaints', complaintRoutes);
+app.use('/api/profile', profileRoute);
 app.use('/uploads', express.static('uploads'));
 
 const port = process.env.PORT || 3000;

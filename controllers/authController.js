@@ -34,7 +34,7 @@ exports.register = async (req, res) => {
         const { username, password, name, role, rt_number, email } = req.body;
 
         // Validasi input
-        if (!username || !password || !name || !role || !email) {
+        if (!username || !password || !name ) {
             return res.status(400).json({ error: 'Semua field harus diisi' });
         }
 
