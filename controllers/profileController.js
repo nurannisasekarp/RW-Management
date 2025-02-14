@@ -30,16 +30,29 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Fungsi untuk mengupdate profil pengguna
+
+// Fungsi untuk edit profil berdasarkan ID user
 exports.editProfile = async (req, res) => {
   try {
-    const { username, name, email, role } = req.body;
-    const token = req.headers.authorization.split(' ')[1];
+    const { id } = req.params; // Ambil ID dari URL
+    console.log('User ID dari URL:', id);
 
-    // Verifikasi token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Periksa apakah ID ada di database
+    const [rows] = await db.query('SELECT id FROM users WHERE id = ?', [id]);
 
-    // Cek apakah ada data baru yang ingin diubah
+    if (!rows.length) {
+      console.log(`User dengan ID ${id} tidak ditemukan`);
+      return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
+    }
+
+    // Ambil data dari body request
+    const { username, name, email } = req.body;
+
+    if (!username && !name && !email) {
+      return res.status(400).json({ error: 'Tidak ada data yang diperbarui' });
+    }
+
+    // Bangun query update dinamis
     const updateFields = [];
     const updateValues = [];
 
@@ -55,30 +68,17 @@ exports.editProfile = async (req, res) => {
       updateFields.push('email = ?');
       updateValues.push(email);
     }
-    if (role) {
-      updateFields.push('role = ?');
-      updateValues.push(role);
-    }
 
-    if (updateFields.length === 0) {
-      return res.status(400).json({ error: 'Tidak ada data yang perlu diperbarui' });
-    }
+    updateValues.push(id);
+    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
 
-    updateValues.push(decoded.id);
+    // Eksekusi query
+    await db.query(updateQuery, updateValues);
 
-    // Menjalankan query untuk memperbarui profil
-    const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
-    await db.query(query, updateValues);
+    res.json({ message: 'Profil berhasil diperbarui' });
 
-    // Mengambil data pengguna yang telah diperbarui
-    const [updatedUser] = await db.query('SELECT id, username, name, email, role FROM users WHERE id = ?', [decoded.id]);
-
-    res.json({
-      message: 'Profil berhasil diperbarui',
-      user: updatedUser[0]
-    });
   } catch (error) {
     console.error('Error updating profile:', error);
-    res.status(500).json({ error: 'Terjadi kesalahan saat memperbarui profil' });
+    res.status(500).json({ error: 'Terjadi kesalahan pada server' });
   }
 };
