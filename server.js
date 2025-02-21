@@ -36,6 +36,8 @@ app._router.stack.forEach((r) => {
         console.log(r.route.path, Object.keys(r.route.methods));
     }
 });
+// Rute untuk update password
+app.use('/api/profile/updatePassword', profileRoute);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

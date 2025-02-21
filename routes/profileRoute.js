@@ -10,4 +10,7 @@ router.get('/getProfile', profileController.getProfile);
 // Rute untuk memperbarui profil pengguna
 router.patch('/editProfile/:id', profileController.editProfile);
 
+// Rute untuk memperbarui password
+router.patch('/updatePassword/:id', profileController.updatePassword);
+
 module.exports = router;
