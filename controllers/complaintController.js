@@ -57,16 +57,31 @@ exports.createComplaint = async (req, res) => {
 
 exports.getComplaints = async (req, res) => {
     try {
-        const [complaints] = await db.query(`
+        const { filter } = req.query; // Get filter parameter from query
+        let query = `
             SELECT 
                 c.*,
                 u.name as reporter_name,
                 DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i') as formatted_date
             FROM complaints c
             LEFT JOIN users u ON c.created_by = u.id
-            ORDER BY c.created_at DESC
-        `);
-
+        `;
+        
+        // Add WHERE clause if filtering for current user's complaints
+        if (filter === 'me') {
+            // Pastikan user sudah login dan ada req.user
+            if (!req.user || !req.user.id) {
+                return res.status(401).json({ error: 'Authentication required to filter by user' });
+            }
+            query += ` WHERE c.created_by = ?`;
+            const [complaints] = await db.query(query, [req.user.id]);
+            return res.json(complaints);
+        }
+        
+        // Jika tidak ada filter, ambil semua data
+        query += ` ORDER BY c.created_at DESC`;
+        const [complaints] = await db.query(query);
+        
         res.json(complaints);
     } catch (error) {
         res.status(500).json({ error: error.message });
