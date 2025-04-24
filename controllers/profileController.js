@@ -104,3 +104,34 @@ exports.updatePassword = async (req, res) => {
     res.status(500).json({ error: 'Terjadi kesalahan pada server' });
   }
 };
+
+const ExcelJS = require('exceljs');
+const db = require('../config/database');
+
+exports.exportUsers = async (req, res) => {
+  try {
+    const [users] = await db.query('SELECT username, name, email, role FROM users');
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Users');
+
+    worksheet.columns = [
+      { header: 'Username', key: 'username' },
+      { header: 'Name', key: 'name' },
+      { header: 'Email', key: 'email' },
+      { header: 'Role', key: 'role' },
+    ];
+
+    users.forEach(user => worksheet.addRow(user));
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (err) {
+    console.error('Export Error:', err);
+    res.status(500).json({ error: 'Gagal mengekspor data pengguna' });
+  }
+};

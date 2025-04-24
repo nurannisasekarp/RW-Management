@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const profileController = require('../controllers/profileController');
 
+
 console.log('Profile routes loaded');
 
 // Rute untuk mendapatkan profil pengguna
 router.get('/getProfile', profileController.getProfile);
+router.get('/export-users', profileController.exportUsers);
 
 // Rute untuk memperbarui profil pengguna
 router.patch('/editProfile/:id', profileController.editProfile);
