@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const profileRoute = require('./routes/profileRoute');
+const userRoute = require('./routes/userRoute');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/profile', profileRoute);
+app.use('/api/user', userRoute);
 app.use('/uploads', express.static('uploads'));
 
 // Debugging: Print all registered routes
