@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const profileController = require('../controllers/profileController');
 
+
 console.log('Profile routes loaded');
 
 // Rute untuk mendapatkan profil pengguna
