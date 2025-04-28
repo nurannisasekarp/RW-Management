@@ -103,23 +103,29 @@ exports.editUser = async (req, res) => {
     const { id } = req.params;
     const { username, password, name, role, rt_number, email } = req.body;
 
+    // List role yang diperbolehkan
     const allowedRoles = ['warga', 'admin', 'bendahara', 'rt', 'rw'];
 
+    // Validasi input
     if (!username || !password || !name || !role) {
       return res.status(400).json({ message: 'username, password, name, dan role wajib diisi' });
     }
 
+    // Validasi role sebelum proses lebih lanjut
     if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ message: 'Role tidak valid. Hanya boleh: warga, admin, bendahara, rt, rw' });
+      return res.status(400).json({ message: `Role '${role}' tidak valid. Hanya boleh: ${allowedRoles.join(', ')}` });
     }
 
+    // Cari user by ID
     const [user] = await db.query('SELECT id FROM users WHERE id = ?', [id]);
     if (user.length === 0) {
       return res.status(404).json({ message: 'User tidak ditemukan' });
     }
 
+    // Hash password baru
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Update user
     const query = `
       UPDATE users 
       SET username = ?, password = ?, name = ?, role = ?, rt_number = ?, email = ?
@@ -138,6 +144,7 @@ exports.editUser = async (req, res) => {
     return res.status(500).json({ message: 'Terjadi kesalahan saat edit user', error: err.message });
   }
 };
+
 
 
 // DELETE: Hapus User
