@@ -70,3 +70,27 @@ exports.importUsers = async (req, res) => {
     res.status(500).json({ error: 'Terjadi kesalahan saat import' });
   }
 };
+
+exports.createUsers = (req, res) => {
+  const { username, password, name, role, rt_number, email } = req.body;
+
+  if (!username || !password || !name || !role) {
+    return res.status(400).json({ message: 'username, password, name, and role are required' });
+  }
+
+  const query = `INSERT INTO users (username, password, name, role, rt_number, email) VALUES (?, ?, ?, ?, ?, ?)`;
+  const values = [username, password, name, role, rt_number || null, email || null];
+
+  db.query(query, values, (err, result) => {
+    if (err) {
+      console.error('Error creating user:', err);
+      return res.status(500).json({ message: 'Error creating user', error: err.message });
+    }
+
+    res.status(201).json({ 
+      message: 'User created successfully', 
+      userId: result.insertId 
+    });
+  });
+};
+

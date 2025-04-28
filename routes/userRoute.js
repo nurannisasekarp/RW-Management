@@ -6,5 +6,6 @@ console.log('Users routes loaded');
 
 router.get('/export-users', userController.exportUsers);
 router.post('/import-users', userController.uploadMiddleware, userController.importUsers);
+router.post('/', userController.createUsers);
 
 module.exports = router;
