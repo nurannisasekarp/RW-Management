@@ -58,16 +58,38 @@ exports.createComplaint = async (req, res) => {
 
 exports.getComplaints = async (req, res) => {
     try {
-        const { filter } = req.query;
+        const { filter, status, sortBy } = req.query;
         const params = [];
-        let whereClause = '';
+        let whereClause = [];
         
+        // Filter by user
         if (filter === 'me') {
             if (!req.user || !req.user.id) {
                 return res.status(401).json({ error: 'Authentication required to filter by user' });
             }
-            whereClause = 'WHERE c.created_by = ?';
+            whereClause.push('c.created_by = ?');
             params.push(req.user.id);
+        }
+        
+        // Filter by status
+        if (status && ['pending', 'in_progress', 'resolved', 'rejected'].includes(status)) {
+            whereClause.push('c.status = ?');
+            params.push(status);
+        }
+        
+        // Combine where clauses
+        const whereString = whereClause.length > 0 
+            ? 'WHERE ' + whereClause.join(' AND ')
+            : '';
+            
+        // Sorting
+        let orderByClause = 'c.created_at DESC'; // default
+        if (sortBy === 'upvotes') {
+            orderByClause = '(SELECT COUNT(*) FROM complaint_votes WHERE complaint_id = c.id AND vote_type = "upvote") DESC, c.created_at DESC';
+        } else if (sortBy === 'created_ar') {
+            orderByClause = 'c.created_at DESC';
+        } else if (sortBy === 'created_at') {
+            orderByClause = 'c.created_at ASC';
         }
 
         const query = `
@@ -80,8 +102,8 @@ exports.getComplaints = async (req, res) => {
                 (SELECT COUNT(*) FROM complaint_comments WHERE complaint_id = c.id) AS comment_count
             FROM complaints c
             LEFT JOIN users u ON c.created_by = u.id
-            ${whereClause}
-            ORDER BY c.created_at DESC
+            ${whereString}
+            ORDER BY ${orderByClause}
         `;
 
         const [complaints] = await db.query(query, params);
