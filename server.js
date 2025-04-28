@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -29,7 +30,7 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/profile', profileRoute);
 app.use('/api/user', userRoute);
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));  
 
 // Debugging: Print all registered routes
 console.log('Registered routes:');

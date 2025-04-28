@@ -58,40 +58,44 @@ exports.createComplaint = async (req, res) => {
 
 exports.getComplaints = async (req, res) => {
     try {
-        const { filter } = req.query; // Get filter parameter from query
-        let query = `
-            SELECT 
-                c.*,
-                u.name as reporter_name,
-                DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i') as formatted_date,
-                (SELECT COUNT(*) FROM complaint_votes WHERE complaint_id = c.id AND vote_type = 'upvote') as upvotes,
-                (SELECT COUNT(*) FROM complaint_votes WHERE complaint_id = c.id AND vote_type = 'downvote') as downvotes,
-                (SELECT COUNT(*) FROM complaint_comments WHERE complaint_id = c.id) as comment_count
-            FROM complaints c
-            LEFT JOIN users u ON c.created_by = u.id
-        `;
+        const { filter } = req.query;
+        const params = [];
+        let whereClause = '';
         
-        // Add WHERE clause if filtering for current user's complaints
         if (filter === 'me') {
-            // Make sure user is logged in and req.user exists
             if (!req.user || !req.user.id) {
                 return res.status(401).json({ error: 'Authentication required to filter by user' });
             }
-            query += ` WHERE c.created_by = ?`;
-            const [complaints] = await db.query(query, [req.user.id]);
-            return res.json(complaints);
+            whereClause = 'WHERE c.created_by = ?';
+            params.push(req.user.id);
         }
-        
-        // If no filter, get all data
-        query += ` ORDER BY c.created_at DESC`;
-        const [complaints] = await db.query(query);
-        
-        res.json(complaints);
+
+        const query = `
+            SELECT 
+                c.*,
+                u.name AS reporter_name,
+                DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i') AS formatted_date,
+                (SELECT COUNT(*) FROM complaint_votes WHERE complaint_id = c.id AND vote_type = 'upvote') AS upvotes,
+                (SELECT COUNT(*) FROM complaint_votes WHERE complaint_id = c.id AND vote_type = 'downvote') AS downvotes,
+                (SELECT COUNT(*) FROM complaint_comments WHERE complaint_id = c.id) AS comment_count
+            FROM complaints c
+            LEFT JOIN users u ON c.created_by = u.id
+            ${whereClause}
+            ORDER BY c.created_at DESC
+        `;
+
+        const [complaints] = await db.query(query, params);
+
+        const updatedComplaints = complaints.map(c => ({
+            ...c,
+            photo_url: c.photo_url ? `${req.protocol}://${req.get('host')}${c.photo_url}` : null
+        }));
+
+        res.json(updatedComplaints);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
-
 exports.getComplaintDetail = async (req, res) => {
     try {
         const { id } = req.params;
