@@ -153,5 +153,21 @@ exports.deleteUser = async (req, res) => {
     return res.status(500).json({ message: 'Error deleting user', error: err.message });
   }
 };
+// GET: Retrieve all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    const [users] = await db.query('SELECT id, username, name, email, role FROM users');
+    
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found' });
+    }
+    
+    return res.status(200).json({ users });
+  } catch (error) {
+    console.error('Error getting all users:', error);
+    return res.status(500).json({ error: 'Failed to retrieve users' });
+  }
+};
+
 
 

@@ -19,4 +19,7 @@ router.put('/:id', userController.editUser);
 // Route untuk delete user berdasarkan ID
 router.delete('/:id', userController.deleteUser);
 
+// Route untuk get all users
+router.get('/', userController.getAllUsers);
+
 module.exports = router;
