@@ -71,26 +71,103 @@ exports.importUsers = async (req, res) => {
   }
 };
 
-exports.createUsers = (req, res) => {
-  const { username, password, name, role, rt_number, email } = req.body;
+// POST: Create User
+exports.createUsers = async (req, res) => {
+  try {
+    const { username, password, name, role, rt_number, email } = req.body;
 
-  if (!username || !password || !name || !role) {
-    return res.status(400).json({ message: 'username, password, name, and role are required' });
-  }
-
-  const query = `INSERT INTO users (username, password, name, role, rt_number, email) VALUES (?, ?, ?, ?, ?, ?)`;
-  const values = [username, password, name, role, rt_number || null, email || null];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error('Error creating user:', err);
-      return res.status(500).json({ message: 'Error creating user', error: err.message });
+    if (!username || !password || !name || !role) {
+      return res.status(400).json({ message: 'username, password, name, and role are required' });
     }
 
-    res.status(201).json({ 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const query = `INSERT INTO users (username, password, name, role, rt_number, email) VALUES (?, ?, ?, ?, ?, ?)`;
+    const values = [username, hashedPassword, name, role, rt_number || null, email || null];
+
+    const [result] = await db.query(query, values);
+
+    return res.status(201).json({ 
       message: 'User created successfully', 
       userId: result.insertId 
     });
-  });
+  } catch (err) {
+    console.error('Error creating user:', err);
+    return res.status(500).json({ message: 'Error creating user', error: err.message });
+  }
 };
+
+// PUT: Edit User
+exports.editUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, password, name, role, rt_number, email } = req.body;
+
+    if (!username || !password || !name || !role) {
+      return res.status(400).json({ message: 'username, password, name, and role are required' });
+    }
+
+    const [user] = await db.query('SELECT id FROM users WHERE id = ?', [id]);
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const query = `UPDATE users SET username = ?, password = ?, name = ?, role = ?, rt_number = ?, email = ? WHERE id = ?`;
+    const values = [username, hashedPassword, name, role, rt_number || null, email || null, id];
+
+    await db.query(query, values);
+
+    return res.status(200).json({
+      message: 'User updated successfully'
+    });
+
+  } catch (err) {
+    console.error('Error editing user:', err);
+    return res.status(500).json({ message: 'Error editing user', error: err.message });
+  }
+  
+};
+// DELETE: Hapus User
+// DELETE: Hapus User
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Cek apakah user dengan ID tersebut ada
+    const [user] = await db.query('SELECT id FROM users WHERE id = ?', [id]);
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Hapus user dari database
+    await db.query('DELETE FROM users WHERE id = ?', [id]);
+
+    return res.status(200).json({
+      message: 'User deleted successfully'
+    });
+
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    return res.status(500).json({ message: 'Error deleting user', error: err.message });
+  }
+};
+// GET: Retrieve all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    const [users] = await db.query('SELECT id, username, name, email, role FROM users');
+    
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found' });
+    }
+    
+    return res.status(200).json({ users });
+  } catch (error) {
+    console.error('Error getting all users:', error);
+    return res.status(500).json({ error: 'Failed to retrieve users' });
+  }
+};
+
+
 
