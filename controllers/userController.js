@@ -103,32 +103,43 @@ exports.editUser = async (req, res) => {
     const { id } = req.params;
     const { username, password, name, role, rt_number, email } = req.body;
 
+    const allowedRoles = ['warga', 'admin', 'bendahara', 'rt', 'rw'];
+
     if (!username || !password || !name || !role) {
-      return res.status(400).json({ message: 'username, password, name, and role are required' });
+      return res.status(400).json({ message: 'username, password, name, dan role wajib diisi' });
+    }
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ message: 'Role tidak valid. Hanya boleh: warga, admin, bendahara, rt, rw' });
     }
 
     const [user] = await db.query('SELECT id FROM users WHERE id = ?', [id]);
     if (user.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User tidak ditemukan' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const query = `UPDATE users SET username = ?, password = ?, name = ?, role = ?, rt_number = ?, email = ? WHERE id = ?`;
+    const query = `
+      UPDATE users 
+      SET username = ?, password = ?, name = ?, role = ?, rt_number = ?, email = ?
+      WHERE id = ?
+    `;
     const values = [username, hashedPassword, name, role, rt_number || null, email || null, id];
 
     await db.query(query, values);
 
     return res.status(200).json({
-      message: 'User updated successfully'
+      message: 'User berhasil diupdate'
     });
 
   } catch (err) {
     console.error('Error editing user:', err);
-    return res.status(500).json({ message: 'Error editing user', error: err.message });
+    return res.status(500).json({ message: 'Terjadi kesalahan saat edit user', error: err.message });
   }
-  
 };
+
+
 // DELETE: Hapus User
 // DELETE: Hapus User
 exports.deleteUser = async (req, res) => {
