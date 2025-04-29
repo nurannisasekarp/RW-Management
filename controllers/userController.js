@@ -145,10 +145,6 @@ exports.editUser = async (req, res) => {
   }
 };
 
-
-
-// DELETE: Hapus User
-// DELETE: Hapus User
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -172,20 +168,34 @@ exports.deleteUser = async (req, res) => {
   }
 };
 // GET: Retrieve all users
+// GET: Retrieve user by ID
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [user] = await db.query('SELECT id, username, name, email, role FROM users WHERE id = ?', [id]);
+    
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.status(200).json({ user: user[0] });
+  } catch (error) {
+    console.error('Error getting user by ID:', error);
+    return res.status(500).json({ error: 'Failed to retrieve user' });
+  }
+};
+// GET: Retrieve all users
 exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.query('SELECT id, username, name, email, role FROM users');
-    
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'No users found' });
-    }
-    
     return res.status(200).json({ users });
   } catch (error) {
     console.error('Error getting all users:', error);
     return res.status(500).json({ error: 'Failed to retrieve users' });
   }
 };
+
 
 
 
